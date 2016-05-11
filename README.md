@@ -6,7 +6,7 @@ bamChart.js is a reusable charting function that constructs a bamboo chart from 
 ##Data the Chart Supports
 A bamboo chart displays data from a data matrix with categories for the columns and rows. The row categories are stored in the first column which is identified by a column name like 'Category'. This column's name must be set using the CategoryKey function. Lastly, the first row of data must contain aggregate data like the column's mean. The aggregate data is used to construct the trunks of each bamboo 'tree' while the remaining rows are used to construct the 'branches'. Example data is below
 
-![alt tag](https://raw.githubusercontent.com/jkinsfat/BambooChart/sample_data/exampleDataPic.png)
+![alt tag](https://raw.githubusercontent.com/jkinsfat/BambooChart/master/sample_data/exampleDataPic.png)
 
 ##Usage
 
