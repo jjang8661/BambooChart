@@ -1,17 +1,16 @@
 function bamChart() {
-	var margin = {top: 50, right: 20, bottom: 45, left: 70},
-		width = 700 - margin.left - margin.right,
-		height = 500 - margin.top - margin.bottom,
-		yID = 'Category',
-		colTotals = [],
-		xLabels = [],
-		yLabels = [],
-		xScale = d3.scale.linear().range(0, width),
-		yScale = d3.scale.ordinal(),
-		ticks = 6,
-		clickColor = 'red',
-		title = 'This is a cool chart',
-		xAxisLabel = 'Here be the x Axis';
+	var margin = {top: 50, right: 20, bottom: 45, left: 70},//Margins around Chart
+		width = 700 - margin.left - margin.right,//Chart Width
+		height = 500 - margin.top - margin.bottom,//Chart Height
+		yID = 'Category',//Key for column that contains the label for the row's data
+		colTotals = [],//Row of aggregate values for each column. Used for the trunk position
+		yLabels = [],//Row Labels.  For Vertical Axis
+		xScale = d3.scale.linear().range(0, width),//Scaling for xAxis
+		yScale = d3.scale.ordinal(),//Scaling for yAxis
+		ticks = 6,//Number of x axis divisions
+		clickColor = 'red',//Color trees turn when clicked
+		title = '',//Chart Title
+		xAxisLabel = '';//x axis title
 
 	function chart(selection) {
 		selection.each(function(data){
@@ -234,7 +233,7 @@ function bamChart() {
 		return this;
 	}
 
-	chart.yID = function(arg) {
+	chart.CategoryID = function(arg) {
 		if (!arg.length) return yID;
 		yID = arg;
 		return this;
