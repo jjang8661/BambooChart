@@ -2,7 +2,7 @@ $(function() {
 	var chart = bamChart()
 		.title('People at risk of poverty or social exclusion')
 		.xAxisLabel('% of population')
-		.yID('Category');
+		.categoryKey('Category');
 
 	d3.csv('sample_data/risk-poverty-dataset.csv', function(data) {
 	    d3.select("#sampleChart")

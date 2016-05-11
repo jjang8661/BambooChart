@@ -14,13 +14,13 @@ function bamChart() {
 
 	function chart(selection) {
 		selection.each(function(data){
-			colTotals = data[0];
-			keys = d3.keys(data[0]);
-			fullData = [];
-			maxValue = 0;
-			minValue = null;
-			data.slice(1).forEach(function(d){
-				yLabels.push(d[yID]);	
+			colTotals = data[0];//Gets first row of data that contains aggregate numbers
+			keys = d3.keys(colTotals);//Gets column keys
+			fullData = [];//Will contain all data points for branch construction
+			maxValue = 0;//For max value in data
+			minValue = null;//For min value in data
+			data.slice(1).forEach(function(d){//Goes through all but the first row.
+				yLabels.push(d[yID]); 
 				keys.forEach(function(f){
 					if (f !== yID) {
 						var branch = [];
@@ -43,29 +43,32 @@ function bamChart() {
 
 			var IDindex = keys.indexOf(yID);//finds index of row category
 			keys.splice(IDindex, 1);//Gets rid of row category key
-			delete colTotals[yID];//Gets rid of key/value that in the the column that contains the row's category
+			delete colTotals[yID];//Gets rid of key/value that in the the column that contains the category for each row
 			yLabels.push('');//Extends y axis to account for adjusted label heights
 
-			xScale.domain([0, maxValue]).range([0, width]);
-			yScale.domain(yLabels).rangePoints([height, 0]);
-			xAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(ticks);
-			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(keys.length - 1);
+			xScale.domain([0, maxValue]).range([0, width]);//Creates x value to pixel conversion
+			yScale.domain(yLabels).rangePoints([height, 0]);//Creates y category to pixel conversion
+			xAxis = d3.svg.axis().scale(xScale).orient('bottom').ticks(ticks);//Create x axis to call later
+			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(keys.length - 1);//Create y axis to call later
 	        yUnits = yScale(yLabels[1]) - yScale(yLabels[0]);//width of the y range bands
-			// Select the svg element, if it exists.
-
+			
+			// Select the svg element
 			var svg = d3.select(this).append('svg')
 				.attr('width', width + margin.right + margin.left)
 	      		.attr('height', height + margin.top + margin.bottom)
 	      		.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');	
 
-			svg.selectAll('line.trunk').data(d3.values(colTotals))
-				.enter()
-				.append('svg:line')
+	      	//Selects all the trunks
+			trunks = svg.selectAll('line.trunk').data(d3.values(colTotals))
+			//Enters and Updates Trunks
+			trunks.enter()
+				.append('svg:line').transition().duration(1000)
 				.attr('x1', function(d){return xScale(d);})
 				.attr('y1',  0)
 				.attr('x2', function(d){return xScale(d);})
 				.attr('y2', height)
-				.attr('class', function(d, i) {return 'trunk key' + i; })
+
+			trunks.attr('class', function(d, i) {return 'trunk key' + i; })
 				.attr('stroke-width', 2)
 				.style('stroke', 'gray')
 				.on('click', function(d, i) {
@@ -89,16 +92,20 @@ function bamChart() {
 						svg.selectAll('.key' + i).style('stroke', 'gray');
 						svg.selectAll('.label' + i).style('opacity', 0)
 					}})
-					
+			//Old trunks are removed from canvas
+			trunks.exit().remove();	
 
-			svg.selectAll('line.branch').data(fullData)
-				.enter()
-				.append('svg:line')
+			//Selects branches 
+			branches = svg.selectAll('line.branch').data(fullData)	
+			//Enters And Updates Branches
+			branches.enter()
+				.append('svg:line').transition().duration(1000)
 				.attr('x1', function(d){return xScale(colTotals[d[2]]);})
 				.attr('y1', function(d){return yScale(yLabels[d[1]]) + yUnits / 2 ;})
 				.attr('x2', function(d){return xScale(d[0]);})
 				.attr('y2', function(d){return yScale(yLabels[d[1]]);})
-				.attr('class', function(d) {return 'branch key' + keys.indexOf(d[2]); })
+
+			branches.attr('class', function(d) {return 'branch key' + keys.indexOf(d[2]); })
 				.attr('stroke-width', 2)
 				.style('stroke', 'gray')
 				.on('click', function(d, i) {
@@ -122,9 +129,13 @@ function bamChart() {
 						svg.selectAll('.key' + keys.indexOf(d[2])).style('stroke', 'gray');
 						svg.selectAll('.label' + keys.indexOf(d[2])).style('opacity', 0)
 					}})
-			
-			svg.selectAll('trunkLabel').data(d3.values(colTotals))
-				.enter()
+			//Transitions Branches
+			//Removes old branches
+			branches.exit().remove();
+
+			trunkLabels = svg.selectAll('trunkLabel').data(d3.values(colTotals))
+			//Enters and updates labels
+			trunkLabels.enter()
 				.append('text')
 				.attr('x', function(d){ return xScale(d)})	
 				.attr('y', -5)
@@ -134,8 +145,11 @@ function bamChart() {
 				.style("text-anchor", "middle")
 				.style('opacity', 0)
 
+			//Removes old labels
+			trunkLabels.exit().remove();
+			//Creates X Axis 
 	  		svg.append('g')
-	  			.attr('transform', 'translate(0,' + height +')')
+	  			.attr('transform', 'translate(0,' + height +')')//Moves Axis to bottom of the chart
 	        	.attr('text-anchor', 'middle')
 	            .attr('font-family', 'sans-serif')
 	            .attr('font-size', '10px')
@@ -145,9 +159,9 @@ function bamChart() {
 	            .style('stroke-width', 1)
 	            .style('shape-rendering', 'crispEdges')
 	            .call(xAxis);
-
+	        //Creates y Axis 
 	        svg.append('g')
-	        	.attr('transform', 'translate('+ xScale(minValue * 0.9) +', 0)')
+	        	.attr('transform', 'translate('+ xScale(minValue * 0.9) +', 0)')//Moves axis to the slight left of the lowest data
 	        	.attr('text-anchor', 'middle')
 	            .attr('font-family', 'sans-serif')
 	            .attr('font-size', '10px')
@@ -157,8 +171,8 @@ function bamChart() {
 	            .style('shape-rendering', 'crispEdges')
 	            .call(yAxis)
 	            .selectAll('text')	
-	            .attr('transform', 'translate(0,'+ yUnits / 2 +')')
-
+	            .attr('transform', 'translate(0,'+ yUnits / 2 +')')//Moves y labels up half a division
+	        //Adds Title to Canvas
 	        svg.append("text")
 		        .attr("x", (width / 2))				
 		        .attr("y", 0 - (margin.top / 2) - 5)
@@ -166,20 +180,20 @@ function bamChart() {
 		        .style("font-size", "18px") 
 		        .style("text-decoration", "underline") 	
 		        .text(title);
-
+		    //Adds label to the x axis
 		  	svg.append("text")
 		        .attr("x", (width / 2))				
 		        .attr("y", height + (margin.bottom / 2) + 20)
 		        .attr("text-anchor", "middle")	
 		        .style("font-size", "12px") 
 		        .text(xAxisLabel);
-
+		    //Moves selected elements to front of canvas
 		    d3.selection.prototype.moveToFront = function() {  
 		    	return this.each(function(){
 		        	this.parentNode.appendChild(this);
 		      	});
 		    };
-
+		    //Moves Selected Elements to Back of Canvas
 		    d3.selection.prototype.moveToBack = function() {  
 		        return this.each(function() { 
 		            var firstChild = this.parentNode.firstChild; 
@@ -191,49 +205,50 @@ function bamChart() {
 		});
 	}
 
+	//Sets the height of the chart and returns that bamChart instance. 
 	chart.height = function(arg) {
 		if (!arg.length) return height;
 		height = arg;
 		return this;
 	}
-
+	//Sets the width of the chart and returns that bamChart instance.
 	chart.width = function(arg) {
 		if (!arg.length) return width;
 		width = arg;
 		return this;
 	}
-
+	//Sets the left margin of the chart to accomodate the length of the labels on the y Axis and returns that bamChart instance
 	chart.lmargin = function(arg) {
 		if (!arg.length) return margin.left;
 		margin.left = arg;
 		return this;
 	}
-
+	//Sets the Chart Title and returns that bamChart instance.
 	chart.title = function(arg) {
 		if (!arg.length) return title;
 		title = arg;
 		return this;
 	}
-
+	//Sets the label for the x Axis and returns that bamChart instance
 	chart.xAxisLabel = function(arg) {
 		if (!arg.length) return xAxisLabel;
 		xAxisLabel = arg;
 		return this;
 	}
-
+	//Divides the x axis into given number of sections with labeled marks at each division and returns that bamChart instance.
 	chart.ticks = function(arg) {
 		if (!arg.length) return xAxisLabel;
 		ticks = arg;
 		return this;
 	}
-
+	//Sets the color that a tree will turn when it is clicked and returns that bamChart instance.
 	chart.clickColor = function(arg) {
 		if (!arg.length) return clickColor;
 		clickColor = arg;
 		return this;
 	}
-
-	chart.CategoryID = function(arg) {
+	//Sets the key for the column that contains the label for each row of the dataset and returns that bamChart instance. 
+	chart.categoryKey = function(arg) {
 		if (!arg.length) return yID;
 		yID = arg;
 		return this;
